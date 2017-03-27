@@ -1,0 +1,22 @@
+Insights
+
+Females are most rightly skewed (more outliers in the high end) in the ring attributes
+Males are most """Normally""" distributed but still slightly skewed to right
+
+High overlap in male & female number of rings given their range are similar
+
+Length also not determined by sex
+length also insignificant in determining n rings(? maybe ?)
+	- length itself is insignificant
+if length is excluded, sex becomes more significant
+	- because sex includes includes infants 
+
+###
+sex is poor variable in determining male female abalones and n rings alone
+	- but is very useful in differentiating adults and infant abalones
+###
+Side note, using knn to determine age isn't a bad method, giving ~20% accuracy
+
+Meaning
+Using just Sex to estimate number of rings is bad idea
+so basically sex likely can be not considered
