@@ -15,8 +15,12 @@ if length is excluded, sex becomes more significant
 sex is poor variable in determining male female abalones and n rings alone
 	- but is very useful in differentiating adults and infant abalones
 ###
-Side note, using knn to determine age isn't a bad method, giving ~20% accuracy
+Side note, using knn to determine exact n rings isn't a bad method, giving ~20% accuracy
 
 Meaning
 Using just Sex to estimate number of rings is bad idea
-so basically sex likely can be not considered
+so basically sex likely can be not considered, but converted sex to 0 or 1
+depending on I or M/F respectively
+
+Good news! it predicts young abalone very well, ~91% accurate
+Bad News! it predicts old abalone very poorly, ~39% accurate 

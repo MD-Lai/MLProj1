@@ -32,13 +32,13 @@ def preprocess_data(dir):
 
 		#bin at start or bin at end...that is the question
 		#i say bin at start
-		#thisLine[len(thisLine) - 1] = binner(float(thisLine[len(thisLine) - 1]), 2)
-		thisLine[len(thisLine) - 1] = float(thisLine[len(thisLine) - 1])
+		thisLine[len(thisLine) - 1] = binner(float(thisLine[len(thisLine) - 1]), 1)
+		#thisLine[len(thisLine) - 1] = float(thisLine[len(thisLine) - 1])
 		data[1].append(thisLine)
 	f.close()
 	return data
 
-def binner(rings, abMode = 1):
+def binner(rings, abMode = 2):
 	if(abMode == 1):
 		return rings
 
@@ -194,13 +194,14 @@ def evaluate(data_set, metric = "accuracy", p = 5, nn = 5):
 	fn = 0
 	tn = 0
 	fp = 0
-
+	random.shuffle(data_set[1])
+	#k fold cross verification
 	for a in range(p):
 
-		#k fold cross verification
 		start = int((len(data_set[1]) / p) * a) 
 		end = min(start + int(len(data_set[1]) / p), int(len(data_set[1])))
 		samples = list(range(start, end))
+
 
 		testSet = []
 		trainSet = [attributes, []]
@@ -218,11 +219,11 @@ def evaluate(data_set, metric = "accuracy", p = 5, nn = 5):
 
 			resultSet.append(
 				#(predictClass( getNeighbours(testInstance, trainSet, nn, "cos", ["Rings"]), "knn"), testInstance[attributes.index("Rings")])
-				(binner( predictClass( getNeighbours(testInstance, trainSet, nn, "cos", ["Rings"]), "knn"), 2), binner(testInstance[attributes.index("Rings")] , 2))
+				(binner( predictClass( getNeighbours(testInstance, trainSet, nn, "cos", ["Rings"]), "knn"), 2), binner(testInstance[attributes.index("Rings")] ,2))
 			)
 
 		print("Set", a+1, "complete")
-		print(resultSet)
+		printPredictions(resultSet)
 		#print("Results -", len(resultSet), "predictions", resultSet)
 		#now you have (classified class, actual class) now calculate the metric
 		#but how do you determine tn or fp
@@ -240,21 +241,19 @@ def evaluate(data_set, metric = "accuracy", p = 5, nn = 5):
 			elif(result[0] != result[1] and result[0] == 0):
 				fn += 1
 
-			else:
-				fp += 1
-
-
 	accuracy = (tp + tn)/(tp+fp+fn+tn)
 	error_rate = 1 - accuracy
 	precision = tp/(tp+fp)
 	sensitivity = tp/(tp+fn)
 	specificity = tn/(tn+fp)
 
+	'''
 	print("acc:", accuracy)
 	print("err:", error_rate)
 	print("pre:", precision)
 	print("sen:", sensitivity)
 	print("spe:", specificity)
+	'''
 
 	if(metric == "accuracy"):
 		return accuracy
@@ -266,9 +265,31 @@ def evaluate(data_set, metric = "accuracy", p = 5, nn = 5):
 		return sensitivity
 	if(metric == "specificity"):
 		return specificity
+	if(metric == "all"):
+		return [accuracy, error_rate, precision, sensitivity, specificity]
 
 
+def printPredictions(predicts):
+	nYoung = 0
+	nOld = 0
+	cYoung = 0
+	cOld = 0
+
+	for guess in predicts:
+
+		if(guess[1] == 0):
+			nYoung += 1
+		elif(guess[1] == 1):
+			nOld += 1
+
+		if(guess[0] == guess[1]):
+			if(guess[0] == 0):
+				cYoung += 1
+			elif(guess[0] == 1):
+				cOld += 1
 	
+	print("n Yng", nYoung, "c Yng", cYoung)
+	print("n Old", nOld, "c Old", cOld)
 
 #some statistical analysis stuff regarding the raw data
 def avgRings(data, sex):
@@ -345,8 +366,18 @@ def doAll():
 	#print(neighbours)
 	#print(predictClass(neighbours, "knn"))
 	#print(testCase[procData[0].index("Rings")])
-	print(evaluate(preprocess_data('./abalone/abalone.data')))
-
-	#printData(preprocess_data('./abalone/abalone.data')
+	acc = []
+	tests = [3,5,7,11,13, 17, 19]
+	nei = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+	for test in tests:
+		for nn in nei:
+			acc.append([test,nn, evaluate(preprocess_data('./abalone/abalone.data'), "all", test, nn)])
+	for a in acc:
+		print("Splits", a[0], "nn", a[1])
+		print("acc:", a[2][0]) #percentage of times it guessed right
+		print("err:", a[2][1]) #percentage of times it guessed wrong
+		print("pre:", a[2][2]) #percent of times it guessed old right out of times it guessed old
+		print("sen:", a[2][3]) #sensitivity is n old
+		print("spe:", a[2][4]) #specificity is n young
 
 doAll()
