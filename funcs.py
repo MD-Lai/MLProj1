@@ -372,21 +372,42 @@ def doAll():
 	#print(predictClass(neighbours, "knn"))
 	#print(testCase[procData[0].index("Rings")])
 	acc = []
-	tests = [3, 5, 7, 11, 13, 17, 19]
-	nei = [2, 3, 5, 7, 11, 13, 17, 19]
-	for test in tests:
+	folds = [19]
+	nei = [11,15,17,20]
+	for p in folds:
 		for nn in nei:
 			acc.append(
-				[test,nn, evaluate(
-					preprocess_data('./abalone/abalone.data'), "all", test, nn)]
+				[p,nn, evaluate(
+					preprocess_data('./abalone/abalone.data'), "all", p, nn)]
 				)
-
+	f = open("results.txt", "a")
+	
 	for a in acc:
+		results = ""
+		results += "Splits: " +str( a[0])+ " nn "+str(a[1]) + "\n"
+		results += "acc: " + str(a[2][0]) + "\n"
+		results += "err: " + str(a[2][1]) + "\n"
+		results += "pre: " + str(a[2][2]) + "\n"
+		results += "sen: " + str(a[2][3]) + "\n"
+		results += "spe: " + str(a[2][4]) + "\n"
+		results += "\n"
+
+		f.write(results)
+		'''
 		print("Splits", a[0], "nn", a[1])
 		print("acc:", a[2][0]) #percentage of times it guessed right
 		print("err:", a[2][1]) #percentage of times it guessed wrong
 		print("pre:", a[2][2]) #percent of times it correctly guessed old
 		print("sen:", a[2][3]) #sensitivity is n old
 		print("spe:", a[2][4]) #specificity is n young
-
+		'''
+	f.close()
+def testPrint():
+	f = open("test.txt",'a')
+	a = 5
+	string = "testing" + str(a) + "\n"
+	for i in range(5):
+		f.write(str(i) +" "+ string)
+	f.close()
 doAll()
+#testPrint()
