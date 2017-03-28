@@ -22,5 +22,20 @@ Using just Sex to estimate number of rings is bad idea
 so basically sex likely can be not considered, but converted sex to 0 or 1
 depending on I or M/F respectively
 
+Cosine
 Good news! it predicts young abalone very well, ~91% accurate
 Bad News! it predicts old abalone very poorly, ~39% accurate 
+
+High specificity with young being the negative case means that it is
+phenomenally good at predicting young abalones but not so good with adults
+
+with smaller splits sensitivity is higher
+
+Euclid 
+Good news! it still predicts young abalone very well, ~90% accurate
+Bad news! it still predicts adult abalone very poorly, ~42% accurate
+
+But this means that it's a bit better at predicting adult abalone
+
+right, we're using micro averaged method for everything
+used micro average to test accuracy etc across various splits
