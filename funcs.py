@@ -32,13 +32,13 @@ def preprocess_data(dir):
 
 		#bin at start or bin at end...that is the question
 		#i say bin at start
-		thisLine[len(thisLine) - 1] = binner(float(thisLine[len(thisLine) - 1]), 1)
+		thisLine[len(thisLine) - 1] = bin(float(thisLine[len(thisLine) - 1]), 1)
 		#thisLine[len(thisLine) - 1] = float(thisLine[len(thisLine) - 1])
 		data[1].append(thisLine)
 	f.close()
 	return data
 
-def binner(rings, abMode = 2):
+def bin(rings, abMode = 2):
 	if(abMode == 1):
 		return rings
 
@@ -57,7 +57,7 @@ def binner(rings, abMode = 2):
 #compares a test instance to a training instance
 #using method (default euclidean dist) to calculate similarity (lower is closer)
 #with optional attibutes to exclude in comparisons specified as array of strings
-def compareInstance(testInst, trainingInst, method = "euc", exclusions = []):
+def compareInstance(testInst, trainingInst, method = "euc", excl = []):
 	'''
 	Methods available:
 		"euc" - euclidean distance (disregarding sex)
@@ -76,19 +76,19 @@ def compareInstance(testInst, trainingInst, method = "euc", exclusions = []):
 	"Shucked Weight",
 	"Viscera Weight",
 	"Shell weight",
-	"Rings"] # to exclude rings in comparison, add "Rings" to exclusions
+	"Rings"] # to exclude rings in comparison, add "Rings" to excl
 
 	if(method == "euc"):
 		#how to account for M/F/I...
 		for i in range(len(testInst)):
-			if attributes[i] not in exclusions:
+			if attributes[i] not in excl:
 				total += pow(trainingInst[i] - testInst[i], 2)
 
 		return pow(total, 0.5)
 
 	if(method == "mnh"):
 		for i in range(len(testInst)):
-			if attributes[i] not in exclusions:
+			if attributes[i] not in excl:
 				total += abs(trainingInst[i] - testInst[i])
 		return total
 
@@ -101,7 +101,7 @@ def compareInstance(testInst, trainingInst, method = "euc", exclusions = []):
 		p = 0
 		q = 0
 		for i in range(len(testInst)):
-			if attributes[i] not in exclusions:
+			if attributes[i] not in excl:
 				pq += trainingInst[i] * testInst[i]
 				p += pow(trainingInst[i], 2)
 				q += pow(testInst[i], 2)
@@ -112,7 +112,7 @@ def compareInstance(testInst, trainingInst, method = "euc", exclusions = []):
 
 #gets the k closest neighbours (default 3)
 #using the specified method (default euclidean dist) to calculate similarity
-def getNeighbours(testInst, trainingDataSet, k = 3, method = 'euc', exclusions = []):
+def getNeighbours(testInst, trainingDataSet, k = 3, method = 'euc', excl= []):
 	# (class, score), looking to collect lowest scores
 	top = []
 	if(k > len(trainingDataSet[1])):
@@ -122,7 +122,7 @@ def getNeighbours(testInst, trainingDataSet, k = 3, method = 'euc', exclusions =
 		top.append((0, 9999))
 
 	for trainInst in trainingDataSet[1]:
-		diff = compareInstance(testInst, trainInst, method, exclusions)
+		diff = compareInstance(testInst, trainInst, method, excl)
 		i = len(top) - 1
 		#large diff means more different, small diff mean less different
 		#meaning we want small diff at back to be reversed later
@@ -184,7 +184,7 @@ def predictClass(neighbours, method = 'knn'):
 
 #evaluate performance of class prediction 
 #using p fold cross validation (default 5)
-#please give a p <= number of data points or it will throw an error
+#please give p <= number of data points or it will throw an error
 #optionally takes number of neighbours for classifier(default 5)
 def evaluate(data_set, metric = "accuracy", p = 5, nn = 5):
 	#data_set is ([attributes], [[data1],[data2],...,[datan]])
@@ -218,11 +218,16 @@ def evaluate(data_set, metric = "accuracy", p = 5, nn = 5):
 		for testInstance in testSet:
 
 			resultSet.append(
-				#(predictClass( getNeighbours(testInstance, trainSet, nn, "cos", ["Rings"]), "knn"), testInstance[attributes.index("Rings")])
-				(binner( predictClass( getNeighbours(testInstance, trainSet, nn, "cos", ["Rings"]), "knn"), 2), binner(testInstance[attributes.index("Rings")] ,2))
+				
+				(bin(
+					predictClass(
+						getNeighbours(
+							testInstance,trainSet, nn, "cos", ["Rings"]), "knn")
+					, 2), 
+				bin(testInstance[attributes.index("Rings")] ,2))
 			)
 
-		print("Set", a+1, "complete")
+		print("Set", a+1, "of", p, "complete")
 		printPredictions(resultSet)
 		#print("Results -", len(resultSet), "predictions", resultSet)
 		#now you have (classified class, actual class) now calculate the metric
@@ -367,16 +372,20 @@ def doAll():
 	#print(predictClass(neighbours, "knn"))
 	#print(testCase[procData[0].index("Rings")])
 	acc = []
-	tests = [3,5,7,11,13, 17, 19]
-	nei = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+	tests = [3, 5, 7, 11, 13, 17, 19]
+	nei = [2, 3, 5, 7, 11, 13, 17, 19]
 	for test in tests:
 		for nn in nei:
-			acc.append([test,nn, evaluate(preprocess_data('./abalone/abalone.data'), "all", test, nn)])
+			acc.append(
+				[test,nn, evaluate(
+					preprocess_data('./abalone/abalone.data'), "all", test, nn)]
+				)
+
 	for a in acc:
 		print("Splits", a[0], "nn", a[1])
 		print("acc:", a[2][0]) #percentage of times it guessed right
 		print("err:", a[2][1]) #percentage of times it guessed wrong
-		print("pre:", a[2][2]) #percent of times it guessed old right out of times it guessed old
+		print("pre:", a[2][2]) #percent of times it correctly guessed old
 		print("sen:", a[2][3]) #sensitivity is n old
 		print("spe:", a[2][4]) #specificity is n young
 
