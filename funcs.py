@@ -112,8 +112,9 @@ def compareInstance(testInst, trainingInst, method = "euc", excl = []):
 
 #gets the k closest neighbours (default 3)
 #using the specified method (default euclidean dist) to calculate similarity
+#use optional exclusions to exclude certain attributes in similarity comparisons
 def getNeighbours(testInst, trainingDataSet, k = 3, method = 'euc', excl= []):
-	# (class, score), looking to collect lowest scores
+	# (predictedClass, score), looking to collect lowest scores
 	top = []
 	if(k > len(trainingDataSet[1])):
 		k = len(trainingDataSet[1])
@@ -127,21 +128,26 @@ def getNeighbours(testInst, trainingDataSet, k = 3, method = 'euc', excl= []):
 		#large diff means more different, small diff mean less different
 		#meaning we want small diff at back to be reversed later
 		while(i >= 0 and diff > top[i][1]):
-			i -= 1
+			#[4,2,0]
+			#     ^    start at end (simplified to show only diff)
+			#     1    want to find where diff=1 sits
+			i -= 1    #move down until the last item it's compared to is smaller
 		if(i >= 0):
+			#[4,2,0]
+			#   ^      i = 1, want to insert it but not simply swap
+			#   1             need to insert and push out end values
+			#
+			#[4,2,1,0] insert at i = i+1
 			top.insert(i + 1, (trainInst[len(trainInst) - 1], diff))
+			# we know that rings attribute is always at end of data
+
+			#[2,1,0]  remove i
+			# ^
+			# 4      discard value
 			top.remove(top[i])
 	# reverses the list of tuples, 
-	# avoids having to see "len(trainInst) - 1" everywhere instead of "0"
+	# avoids having to see "len(trainInst) - 1" everywhere instead of just "0"
 	return list(reversed(top))
-
-#used to verify that the given list of closest neighbours is sequential
-def verifyTop(topList):
-	for i in range(len(topList) - 1):
-		if(topList[i][1] < topList[i+1][1]):
-			return False
-
-	return topList
 
 #predicts a class using specified method (default knn)
 def predictClass(neighbours, method = 'knn'):
@@ -151,10 +157,11 @@ def predictClass(neighbours, method = 'knn'):
 	"knn" - classifies instance based on majority class of k nearest neighbours
 	'''
 	if(method == "1nn"):
+		#due to ordering of neighbours, first item is item with least diff
 		return neighbours[0][0]
 
 	if(method == "knn"):
-		cls = 0
+		
 		tracker = {}
 		for clsScore in neighbours:
 			if(clsScore[0] in tracker):
@@ -164,19 +171,24 @@ def predictClass(neighbours, method = 'knn'):
 
 		items = []
 		for trackerKeys in tracker.keys():
+			#tracker keys is n rings of test data
+			#
 			items.append((trackerKeys, tracker[trackerKeys]))
 
 
 		for i in range(1, len(items) - 1):
 			j = i 
 
-			# want item with highest number of close neighbours to be at front
+			# want item with highest number of neighbours to be at front
 			# swap if item below it has lower number of neighbours
 			#while(j > 0 and len(items[j-1][1]) < len(items[j][1])):
 			while(j > 0 and items[j-1][1] < items[j][1]):
 				items[j-1], items[j] = items[j], items[j-1]
 				j -= 1
 
+		#once sorted, return item at front, 
+		#which is the class with most neighbours OR
+		#in case of tie, due to use of dict, result is a little random...
 		return items[0][0]
 
 
@@ -253,13 +265,13 @@ def evaluate(data_set, metric = "accuracy", p = 19, nn = 7):
 	sensitivity = tp/(tp+fn)
 	specificity = tn/(tn+fp)
 
-	'''
+	
 	print("acc:", accuracy)
 	print("err:", error_rate)
 	print("pre:", precision)
 	print("sen:", sensitivity)
 	print("spe:", specificity)
-	'''
+	
 
 	if(metric == "accuracy"):
 		return accuracy
@@ -297,7 +309,7 @@ def printPredictions(predicts):
 	print("n Yng", nYoung, "c Yng", cYoung)
 	print("n Old", nOld, "c Old", cOld)
 
-def doAll(mode = "file"):
+def doAll(mode = "print"):
 
 	folds = [19]
 	nei = [7]
@@ -309,6 +321,7 @@ def doAll(mode = "file"):
 				[p,nn, evaluate(
 					preprocess_data('./abalone/abalone.data'), "all", p, nn)]
 				)
+
 	f = open("results.txt", "a")
 	
 	for a in acc:
@@ -323,6 +336,7 @@ def doAll(mode = "file"):
 			results += "\n"
 
 			f.write(results)
+
 		else:
 			print("Splits", a[0], "nn", a[1])
 			print("acc:", a[2][0]) #percentage of times it guessed right
@@ -333,4 +347,5 @@ def doAll(mode = "file"):
 		
 	f.close()
 
+#use this line to view the full output of the program
 doAll("file")
