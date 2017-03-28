@@ -73,4 +73,4 @@ def printStats(data):
 	#print(neighbours)
 	#print(predictClass(neighbours, "knn"))
 	#print(testCase[procData[0].index("Rings")])
-	acc = []
+	

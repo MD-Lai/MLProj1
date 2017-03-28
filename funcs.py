@@ -302,7 +302,7 @@ def doAll(mode = "file"):
 	folds = [19]
 	nei = [7]
 	acc = []
-	
+
 	for p in folds:
 		for nn in nei:
 			acc.append(
@@ -332,12 +332,5 @@ def doAll(mode = "file"):
 			print("spe:", a[2][4]) #specificity is n young
 		
 	f.close()
-def testPrint():
-	f = open("test.txt",'a')
-	a = 5
-	string = "testing" + str(a) + "\n"
-	for i in range(5):
-		f.write(str(i) +" "+ string)
-	f.close()
-doAll()
-#testPrint()
+
+doAll("file")
